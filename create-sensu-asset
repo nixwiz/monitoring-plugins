@@ -4,11 +4,12 @@ WORK_DIR=/tmp/sensu-assets
 BUILD_DIR=$WORK_DIR/build
 OUTPUT_DIR=$PWD
 GREP_EXCLUDE='(ld.so|ld-linux-x86-64.so|libBrokenLocale.so|libSegFault.so|libanl.so|libc.so|libdl.so|libm.so|libmvec.so|libnss_compat.so|libnss_dns.so|libnss_files.so|libpthread.so|libresolv.so|librt.so|libthread_db.so|libutil.so|vdso.so)'
+SKIP_MISSING=false
 
 mkdir -p $BUILD_DIR
 
 # Read arguments
-while getopts ha:v:b:l:i:e:o: argument;
+while getopts hsa:v:b:l:i:e:o: argument;
 do
   case "${argument}"
     in
@@ -59,6 +60,7 @@ do
         echo "  -o OUTPUT_DIR"
         echo "          The directory where the asset should be created"
         echo "          (output). Defaults to \$PWD"
+	echo "  -s      Skip missing plugin files, default is to exit with failure"
         exit 0;
         ;;
       a)
@@ -82,7 +84,9 @@ do
       o)
         OUTPUT_DIR=${OPTARG}
         ;;
-
+      s)
+        SKIP_MISSING=true
+        ;;
   esac
 done;
 
@@ -121,7 +125,9 @@ if [[ -n $BINS ]]; then
       fi;
     else
       echo "ERROR: file not found: ${BINARY}"
-      exit 2;
+      if [[ "${SKIP_MISSING}" = "false" ]]; then
+        exit 2;
+      fi
     fi
   done
 fi
